@@ -276,10 +276,10 @@ func PdhMakeCounterPath(e *PDH_COUNTER_PATH_ELEMENTS, buffer LPWSTR, buflen *uin
 	return PDH_STATUS(ret1)
 }
 
-func PdhOpenQuery(source string, userdata *uint32, handle *PDH_HQUERY) PDH_STATUS {
-	sourceStr := unicode16FromString(source)
+func PdhOpenQuery(source LPCWSTR, userdata *uint32, handle *PDH_HQUERY) PDH_STATUS {
+	//sourceStr := unicode16FromString(source)
 	ret1 := syscall3(pdhOpenQuery, 3,
-		uintptr(unsafe.Pointer(&sourceStr[0])),
+		uintptr(unsafe.Pointer(source)),
 		uintptr(unsafe.Pointer(userdata)),
 		uintptr(unsafe.Pointer(handle)))
 	return PDH_STATUS(ret1)

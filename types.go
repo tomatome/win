@@ -6191,3 +6191,28 @@ func TypeNames() []string {
 	}
 	return ret
 }
+
+type MEMORYSTATUSEX struct {
+	CbSize                  DWORD
+	DwMemoryLoad            DWORD
+	UllTotalPhys            uint64 // in bytes
+	UllAvailPhys            uint64
+	UllTotalPageFile        uint64
+	UllAvailPageFile        uint64
+	UllTotalVirtual         uint64
+	UllAvailVirtual         uint64
+	UllAvailExtendedVirtual uint64
+}
+
+type LPPROCESSENTRY32 struct {
+	DwSize              DWORD
+	CntUsage            DWORD
+	Th32ProcessID       DWORD
+	Th32DefaultHeapID   ULONG_PTR
+	Th32ModuleID        DWORD
+	CntThreads          DWORD
+	Th32ParentProcessID DWORD
+	PcPriClassBase      LONG
+	DwFlags             DWORD
+	SzExeFile           [MAX_PATH]CHAR
+}

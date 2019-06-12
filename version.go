@@ -82,7 +82,7 @@ func VerInstallFile(uFlags DWORD, szSrcFileName LPWSTR, szDestFileName LPWSTR, s
 	return DWORD(ret1)
 }
 
-func VerQueryValue(pBlock /*const*/ LPVOID, lpSubBlock string, lplpBuffer *LPVOID, puLen *uint32) bool {
+func VerQueryValue(pBlock /*const*/ LPVOID, lpSubBlock string, lplpBuffer LPVOID, puLen *uint32) bool {
 	lpSubBlockStr := unicode16FromString(lpSubBlock)
 	ret1 := syscall6(verQueryValue, 4,
 		uintptr(unsafe.Pointer(pBlock)),

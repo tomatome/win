@@ -772,7 +772,7 @@ const (
 
 const MAX_DNS_SUFFIX_STRING_LENGTH = 256
 
-const ANY_SIZE = 1
+const ANY_SIZE = 100
 
 const MAX_ADAPTER_NAME = 128
 

@@ -209,6 +209,7 @@ var (
 	getDateFormat                         uintptr
 	getDevicePowerState                   uintptr
 	getDiskFreeSpace                      uintptr
+	getDiskFreeSpaceEx                    uintptr
 	getDllDirectory                       uintptr
 	getDriveType                          uintptr
 	getDurationFormat                     uintptr
@@ -236,6 +237,7 @@ var (
 	getLocaleInfo                         uintptr
 	getLogicalDriveStrings                uintptr
 	getLogicalDrives                      uintptr
+	getLogicalProcessorInformationEx      uintptr
 	getLongPathNameTransacted             uintptr
 	getLongPathName                       uintptr
 	getMailslotInfo                       uintptr
@@ -342,6 +344,7 @@ var (
 	globalGetAtomName                     uintptr
 	globalHandle                          uintptr
 	globalLock                            uintptr
+	globalMemoryStatusEx                  uintptr
 	globalReAlloc                         uintptr
 	globalSize                            uintptr
 	globalUnWire                          uintptr
@@ -430,6 +433,7 @@ var (
 	peekNamedPipe                         uintptr
 	postQueuedCompletionStatus            uintptr
 	prepareTape                           uintptr
+	process32Next                         uintptr
 	processIdToSessionId                  uintptr
 	pulseEvent                            uintptr
 	purgeComm                             uintptr
@@ -872,6 +876,7 @@ func init() {
 	getDateFormat = doGetProcAddress(libkernel32, "GetDateFormatW")
 	getDevicePowerState = doGetProcAddress(libkernel32, "GetDevicePowerState")
 	getDiskFreeSpace = doGetProcAddress(libkernel32, "GetDiskFreeSpaceW")
+	getDiskFreeSpaceEx = doGetProcAddress(libkernel32, "GetDiskFreeSpaceExW")
 	getDllDirectory = doGetProcAddress(libkernel32, "GetDllDirectoryW")
 	getDriveType = doGetProcAddress(libkernel32, "GetDriveTypeW")
 	getDurationFormat = doGetProcAddress(libkernel32, "GetDurationFormat")
@@ -899,6 +904,7 @@ func init() {
 	getLocaleInfo = doGetProcAddress(libkernel32, "GetLocaleInfoW")
 	getLogicalDriveStrings = doGetProcAddress(libkernel32, "GetLogicalDriveStringsW")
 	getLogicalDrives = doGetProcAddress(libkernel32, "GetLogicalDrives")
+	getLogicalProcessorInformationEx = doGetProcAddress(libkernel32, "GetLogicalProcessorInformationEx")
 	getLongPathNameTransacted = doGetProcAddress(libkernel32, "GetLongPathNameTransactedW")
 	getLongPathName = doGetProcAddress(libkernel32, "GetLongPathNameW")
 	getMailslotInfo = doGetProcAddress(libkernel32, "GetMailslotInfo")
@@ -1005,6 +1011,7 @@ func init() {
 	globalGetAtomName = doGetProcAddress(libkernel32, "GlobalGetAtomNameW")
 	globalHandle = doGetProcAddress(libkernel32, "GlobalHandle")
 	globalLock = doGetProcAddress(libkernel32, "GlobalLock")
+	globalMemoryStatusEx = doGetProcAddress(libkernel32, "GlobalMemoryStatusEx")
 	globalReAlloc = doGetProcAddress(libkernel32, "GlobalReAlloc")
 	globalSize = doGetProcAddress(libkernel32, "GlobalSize")
 	globalUnWire = doGetProcAddress(libkernel32, "GlobalUnWire")
@@ -1093,6 +1100,7 @@ func init() {
 	peekNamedPipe = doGetProcAddress(libkernel32, "PeekNamedPipe")
 	postQueuedCompletionStatus = doGetProcAddress(libkernel32, "PostQueuedCompletionStatus")
 	prepareTape = doGetProcAddress(libkernel32, "PrepareTape")
+	process32Next = doGetProcAddress(libkernel32, "Process32Next")
 	processIdToSessionId = doGetProcAddress(libkernel32, "ProcessIdToSessionId")
 	pulseEvent = doGetProcAddress(libkernel32, "PulseEvent")
 	purgeComm = doGetProcAddress(libkernel32, "PurgeComm")
@@ -3420,7 +3428,17 @@ func GetDevicePowerState(hDevice HANDLE, pfOn *BOOL) bool {
 }
 
 // TODO: Unknown type(s): PULARGE_INTEGER
-// func GetDiskFreeSpaceEx(lpDirectoryName string, lpFreeBytesAvailableToCaller PULARGE_INTEGER, lpTotalNumberOfBytes PULARGE_INTEGER, lpTotalNumberOfFreeBytes PULARGE_INTEGER) bool
+func GetDiskFreeSpaceEx(lpDirectoryName string, lpFreeBytesAvailableToCaller uint64, lpTotalNumberOfBytes *uint64, lpTotalNumberOfFreeBytes *uint64) bool {
+	lpDirectoryNameStr := unicode16FromString(lpDirectoryName)
+	ret1 := syscall6(getDiskFreeSpaceEx, 5,
+		uintptr(unsafe.Pointer(&lpDirectoryNameStr[0])),
+		uintptr(unsafe.Pointer(&lpFreeBytesAvailableToCaller)),
+		uintptr(unsafe.Pointer(lpTotalNumberOfBytes)),
+		uintptr(unsafe.Pointer(lpTotalNumberOfFreeBytes)),
+		0,
+		0)
+	return ret1 != 0
+}
 
 func GetDiskFreeSpace(lpRootPathName string, lpSectorsPerCluster *uint32, lpBytesPerSector *uint32, lpNumberOfFreeClusters *uint32, lpTotalNumberOfClusters *uint32) bool {
 	lpRootPathNameStr := unicode16FromString(lpRootPathName)
@@ -3728,9 +3746,42 @@ func GetLogicalDrives() DWORD {
 
 // TODO: Unknown type(s): PSYSTEM_LOGICAL_PROCESSOR_INFORMATION
 // func GetLogicalProcessorInformation(buffer PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, returnedLength *DWORD) bool
+type LOGICAL_PROCESSOR_RELATIONSHIP int
 
+const (
+	//Retrieves information about logical processors that share a single processor core.
+	RelationProcessorCore = 0
+	//Retrieves information about logical processors that are part of the same NUMA node.
+	RelationNumaNode = 1
+	//Retrieves information about logical processors that share a cache.
+	RelationCache = 2
+	//Retrieves information about logical processors that share a physical package.
+	RelationProcessorPackage = 3
+	//Retrieves information about logical processors that share a processor group.
+	RelationGroup = 4
+	//Retrieves information about logical processors for all relationship types
+	RelationAll = 0xffff
+)
+
+/*type  SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX struct{
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  DWORD                          Size;
+  union {
+    PROCESSOR_RELATIONSHIP Processor;
+    NUMA_NODE_RELATIONSHIP NumaNode;
+    CACHE_RELATIONSHIP     Cache;
+    GROUP_RELATIONSHIP     Group;
+  };
+} */
 // TODO: Unknown type(s): LOGICAL_PROCESSOR_RELATIONSHIP, PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX
-// func GetLogicalProcessorInformationEx(relationshipType LOGICAL_PROCESSOR_RELATIONSHIP, buffer PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, returnedLength *DWORD) bool
+//func GetLogicalProcessorInformationEx(relationshipType LOGICAL_PROCESSOR_RELATIONSHIP, buffer PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, returnedLength *DWORD) bool
+func GetLogicalProcessorInformationEx(relationshipType LOGICAL_PROCESSOR_RELATIONSHIP, buffer LPWSTR, returnedLength *DWORD) DWORD {
+	ret1 := syscall3(getLogicalProcessorInformationEx, 3,
+		uintptr(relationshipType),
+		uintptr(unsafe.Pointer(buffer)),
+		uintptr(unsafe.Pointer(returnedLength)))
+	return DWORD(ret1)
+}
 
 func GetLongPathNameTransacted(lpszShortPath string, lpszLongPath LPWSTR, cchBuffer DWORD, hTransaction HANDLE) DWORD {
 	lpszShortPathStr := unicode16FromString(lpszShortPath)
@@ -4801,7 +4852,13 @@ func GlobalLock(hMem HGLOBAL) LPVOID {
 // func GlobalMemoryStatus(lpBuffer LPMEMORYSTATUS)
 
 // TODO: Unknown type(s): LPMEMORYSTATUSEX
-// func GlobalMemoryStatusEx(lpBuffer LPMEMORYSTATUSEX) bool
+func GlobalMemoryStatusEx(lpBuffer *MEMORYSTATUSEX) bool {
+	ret1 := syscall3(globalMemoryStatusEx, 1,
+		uintptr(unsafe.Pointer(lpBuffer)),
+		0,
+		0)
+	return ret1 != 0
+}
 
 func GlobalReAlloc(hMem HGLOBAL, dwBytes SIZE_T, uFlags UINT) HGLOBAL {
 	ret1 := syscall3(globalReAlloc, 3,
@@ -5715,7 +5772,13 @@ func PrepareTape(hDevice HANDLE, dwOperation DWORD, bImmediate bool) DWORD {
 // func Process32FirstW(hSnapshot HANDLE, lppe LPPROCESSENTRY32W) bool
 
 // TODO: Unknown type(s): LPPROCESSENTRY32W
-// func Process32NextW(hSnapshot HANDLE, lppe LPPROCESSENTRY32W) bool
+func Process32Next(hSnapshot HANDLE, lppe *LPPROCESSENTRY32) bool {
+	ret1 := syscall3(process32Next, 2,
+		uintptr(hSnapshot),
+		uintptr(unsafe.Pointer(lppe)),
+		0)
+	return ret1 != 0
+}
 
 func ProcessIdToSessionId(dwProcessId DWORD, pSessionId *uint32) bool {
 	ret1 := syscall3(processIdToSessionId, 2,
