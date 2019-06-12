@@ -3746,7 +3746,7 @@ func GetLogicalDrives() DWORD {
 
 // TODO: Unknown type(s): PSYSTEM_LOGICAL_PROCESSOR_INFORMATION
 // func GetLogicalProcessorInformation(buffer PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, returnedLength *DWORD) bool
-type LOGICAL_PROCESSOR_RELATIONSHIP int
+type LOGICAL_PROCESSOR_RELATIONSHIP int32
 
 const (
 	//Retrieves information about logical processors that share a single processor core.
@@ -3773,6 +3773,64 @@ const (
     GROUP_RELATIONSHIP     Group;
   };
 } */
+type SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX struct {
+	Relationship LOGICAL_PROCESSOR_RELATIONSHIP
+	Size         DWORD
+	RelShip      [100]byte
+}
+
+type PROCESSOR_CACHE_TYPE int32
+
+const (
+	CacheUnified PROCESSOR_CACHE_TYPE = iota
+	CacheInstruction
+	CacheData
+	CacheTrace
+)
+
+type KAFFINITY ULONG_PTR
+
+type GROUP_AFFINITY struct {
+	Mask     [10]uint32
+	Group    DWORD
+	Reserved [3]DWORD
+}
+
+type PROCESSOR_RELATIONSHIP struct {
+	Flags           BYTE
+	EfficiencyClass BYTE
+	Reserved        [20]BYTE
+	GroupCount      DWORD
+	GroupMask       [ANYSIZE_ARRAY]GROUP_AFFINITY
+}
+
+type NUMA_NODE_RELATIONSHIP struct {
+	NodeNumber DWORD
+	Reserved   [20]BYTE
+	GroupMask  GROUP_AFFINITY
+}
+type CACHE_RELATIONSHIP struct {
+	Level         BYTE //1,2,3
+	Associativity BYTE
+	LineSize      DWORD
+	CacheSize     DWORD
+	Type          DWORD //PROCESSOR_CACHE_TYPE
+	Reserved      [20]BYTE
+	GroupMask     GROUP_AFFINITY
+}
+type GROUP_RELATIONSHIP struct {
+	MaximumGroupCount DWORD
+	ActiveGroupCount  DWORD
+	Reserved          [20]BYTE
+	GroupInfo         [ANYSIZE_ARRAY]PROCESSOR_GROUP_INFO
+}
+type PROCESSOR_GROUP_INFO struct {
+	MaximumProcessorCount BYTE
+	ActiveProcessorCount  BYTE
+	Reserved              [38]BYTE
+	ActiveProcessorMask   KAFFINITY
+}
+
 // TODO: Unknown type(s): LOGICAL_PROCESSOR_RELATIONSHIP, PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX
 //func GetLogicalProcessorInformationEx(relationshipType LOGICAL_PROCESSOR_RELATIONSHIP, buffer PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, returnedLength *DWORD) bool
 func GetLogicalProcessorInformationEx(relationshipType LOGICAL_PROCESSOR_RELATIONSHIP, buffer LPWSTR, returnedLength *DWORD) DWORD {
