@@ -4495,6 +4495,13 @@ type PDH_DATA_ITEM_PATH_ELEMENTS struct {
 	wItemId        DWORD
 	SzInstanceName LPWSTR
 }
+
+const (
+	PDH_FMT_LONG   = (DWORD(0x00000100))
+	PDH_FMT_DOUBLE = (DWORD(0x00000200))
+	PDH_FMT_LARGE  = (DWORD(0x00000400))
+)
+
 type PDH_FMT_COUNTERVALUE struct {
 	storage [16]byte
 }
