@@ -1938,8 +1938,29 @@ func DuplicateToken(existingTokenHandle HANDLE, impersonationLevel SECURITY_IMPE
 	return ret1 != 0
 }
 
+type TOKEN_TYPE uint32
+
+const (
+	TokenPrimary = iota + 1
+	TokenImpersonation
+)
+
 // TODO: Unknown type(s): TOKEN_TYPE
-// func DuplicateTokenEx(hExistingToken HANDLE, dwDesiredAccess DWORD, lpTokenAttributes *SECURITY_ATTRIBUTES, impersonationLevel SECURITY_IMPERSONATION_LEVEL, tokenType TOKEN_TYPE, phNewToken *HANDLE) bool
+func DuplicateTokenEx(hExistingToken HANDLE,
+	dwDesiredAccess DWORD,
+	lpTokenAttributes *SECURITY_ATTRIBUTES,
+	impersonationLevel SECURITY_IMPERSONATION_LEVEL,
+	tokenType TOKEN_TYPE,
+	phNewToken *HANDLE) DWORD {
+	ret1 := syscall6(duplicateToken, 6,
+		uintptr(hExistingToken),
+		uintptr(dwDesiredAccess),
+		uintptr(unsafe.Pointer(lpTokenAttributes)),
+		uintptr(impersonationLevel),
+		uintptr(tokenType),
+		uintptr(unsafe.Pointer(phNewToken)))
+	return DWORD(ret1)
+}
 
 func EncryptFile(lpFileName string) bool {
 	lpFileNameStr := unicode16FromString(lpFileName)

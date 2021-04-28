@@ -3763,6 +3763,21 @@ const (
 	RelationAll = 0xffff
 )
 
+func (s LOGICAL_PROCESSOR_RELATIONSHIP) String() string {
+	if s == RelationProcessorCore {
+		return "RelationProcessorCore"
+	} else if s == RelationNumaNode {
+		return "RelationNumaNode"
+	} else if s == RelationCache {
+		return "RelationCache"
+	} else if s == RelationProcessorPackage {
+		return "RelationProcessorPackage"
+	} else if s == RelationGroup {
+		return "RelationGroup"
+	}
+	return "Unknown"
+}
+
 /*type  SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX struct{
   LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
   DWORD                          Size;
@@ -3776,7 +3791,7 @@ const (
 type SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX struct {
 	Relationship LOGICAL_PROCESSOR_RELATIONSHIP
 	Size         DWORD
-	RelShip      [100]byte
+	RelShip      [4096]byte
 }
 
 type PROCESSOR_CACHE_TYPE int32
@@ -3790,8 +3805,12 @@ const (
 
 type KAFFINITY ULONG_PTR
 
+const GROUP_SIZE = 100
+const LTP_PC_SMT = 0x1
+
 type GROUP_AFFINITY struct {
-	Mask     [10]uint32
+	//Mask [10]uint32
+	Mask     KAFFINITY
 	Group    DWORD
 	Reserved [3]DWORD
 }
@@ -3799,9 +3818,9 @@ type GROUP_AFFINITY struct {
 type PROCESSOR_RELATIONSHIP struct {
 	Flags           BYTE
 	EfficiencyClass BYTE
-	Reserved        [20]BYTE
+	Reserved        [21]BYTE
 	GroupCount      DWORD
-	GroupMask       [ANYSIZE_ARRAY]GROUP_AFFINITY
+	GroupMask       [GROUP_SIZE]GROUP_AFFINITY
 }
 
 type NUMA_NODE_RELATIONSHIP struct {
@@ -3822,7 +3841,7 @@ type GROUP_RELATIONSHIP struct {
 	MaximumGroupCount DWORD
 	ActiveGroupCount  DWORD
 	Reserved          [20]BYTE
-	GroupInfo         [ANYSIZE_ARRAY]PROCESSOR_GROUP_INFO
+	GroupInfo         [GROUP_SIZE]PROCESSOR_GROUP_INFO
 }
 type PROCESSOR_GROUP_INFO struct {
 	MaximumProcessorCount BYTE
